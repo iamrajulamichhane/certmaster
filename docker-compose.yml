@@ -1,0 +1,23 @@
+services:
+  certmaster:
+    build: .
+    image: certmaster:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Leave empty for same-origin only. To allow a specific front-end origin:
+      # ALLOWED_ORIGINS: "https://certs.example.com"
+      ALLOWED_ORIGINS: ""
+    read_only: true          # container filesystem is read-only (defense in depth)
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
